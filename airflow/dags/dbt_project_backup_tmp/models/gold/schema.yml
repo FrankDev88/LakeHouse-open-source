@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: sales_gold
+    description: "Resumen diario de ventas y transacciones. Agregado por fecha."
+    columns:
+      - name: date
+        description: "Fecha del resumen."
+        tests:
+          - unique
+          - not_null
+      - name: total_sales
+        description: "Suma total de ventas del día."
+        tests:
+          - not_null

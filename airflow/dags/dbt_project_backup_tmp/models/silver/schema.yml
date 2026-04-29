@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: sales_silver
+    description: "Tabla de ventas limpias procesada desde el bronce. Contiene transacciones individuales filtradas."
+    columns:
+      - name: id
+        description: "ID único de la transacción."
+        tests:
+          - unique
+          - not_null
+      - name: amount
+        description: "Monto de la venta."
+        tests:
+          - not_null
+      - name: date
+        description: "Fecha de la venta."
+        tests:
+          - not_null
