@@ -12,8 +12,8 @@ WORKDIR /workspace
 COPY requirements.workspace.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Pre-install DuckDB extensions for S3 and Delta
-RUN python -c "import duckdb; conn = duckdb.connect(); conn.execute('INSTALL httpfs; INSTALL delta; INSTALL aws;'); conn.close()"
+# Pre-install DuckDB extensions for S3 and DuckLake
+RUN python -c "import duckdb; conn = duckdb.connect(); conn.execute('INSTALL httpfs; INSTALL aws; INSTALL ducklake;'); conn.close()"
 
 ENV PYTHONPATH=/workspace
 ENV DBT_PROJECT_DIR=/workspace/dbt_project

@@ -1,27 +1,41 @@
 import pandas as pd
-from deltalake import write_deltalake
+import duckdb
 import os
 
-def ingest_to_delta():
-    # 1. Configuración de credenciales (extraídas de tu código original)
+def ingest_to_ducklake():
+    # 1. Configuración de credenciales
     s3_endpoint = os.getenv("S3_ENDPOINT", "http://minio:9000")
+    # DuckDB requiere el endpoint sin 'http://' para su configuración
+    clean_endpoint = s3_endpoint.replace("http://", "").replace("https://", "")
+    
     access_key = os.getenv("AWS_ACCESS_KEY_ID", "admin")
     secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "password123")
     region = os.getenv("AWS_REGION", "us-east-1")
     
-    print(f"Iniciando configuración hacia {s3_endpoint}...")
+    print(f"Iniciando configuración hacia {clean_endpoint}...")
 
-    # 2. Diccionario de configuración para MinIO/S3
-    # La configuración "AWS_S3_ALLOW_UNSAFE_RENAME" es importante cuando se usa MinIO 
-    # u otros sistemas de almacenamiento compatibles con S3 que no bloquean archivos.
-    storage_options = {
-        "AWS_ENDPOINT_URL": s3_endpoint,
-        "AWS_ACCESS_KEY_ID": access_key,
-        "AWS_SECRET_ACCESS_KEY": secret_key,
-        "AWS_REGION": region,
-        "AWS_S3_ALLOW_UNSAFE_RENAME": "true" ,
-        "AWS_ALLOW_HTTP": "true"  # <--- Agrega esta línea
-    }
+    # 2. Conectar a DuckDB y configurar extensiones
+    con = duckdb.connect()
+    
+    # Instalamos y cargamos la extensión de S3 y DuckLake
+    con.execute("INSTALL httpfs;")
+    con.execute("LOAD httpfs;")
+    con.execute("INSTALL ducklake;")
+    con.execute("LOAD ducklake;")
+
+    # Creamos el secreto en DuckDB para apuntar a MinIO (reemplaza tu storage_options)
+    # USE_SSL false y URL_STYLE 'path' equivalen al AWS_ALLOW_HTTP y compatibilidad MinIO
+    con.execute(f"""
+        CREATE SECRET minio_secret (
+            TYPE S3,
+            KEY_ID '{access_key}',
+            SECRET '{secret_key}',
+            REGION '{region}',
+            ENDPOINT '{clean_endpoint}',
+            URL_STYLE 'path',
+            USE_SSL false
+        );
+    """)
 
     # 3. Leer el DataFrame desde tu archivo CSV
     print("Cargando el archivo warehouse.csv...")
@@ -31,20 +45,23 @@ def ingest_to_delta():
         print("Error: No se encontró el archivo 'warehouse.csv'.")
         return
 
-    # 4. Escribir a Delta Lake en el bucket 'retail'
-    # Define la ruta destino (puedes cambiar 'warehouse_data' por la carpeta que prefieras)
-    delta_path = "s3://retail/raw"
+    # 4. Escribir a DuckLake en el bucket 'retail'
+    ducklake_path = "s3://retail/raw/retail_raw"
+    print(f"Escribiendo a formato DuckLake en la ruta: {ducklake_path}...")
     
-    print(f"Escribiendo DataFrame a formato Delta Lake en la ruta: {delta_path}...")
+    # ATTACH crea el metastore (el 'cerebro' de DuckLake) y lo vincula a tu bucket en MinIO
+    # Se creará un archivo local 'retail_metadata.ducklake' para gobernar esa ruta
+    con.execute(f"""
+        ATTACH 'ducklake:retail_metadata.ducklake' AS my_lake 
+        (DATA_PATH '{ducklake_path}');
+    """)
     
-    write_deltalake(
-        delta_path,
-        df,
-        storage_options=storage_options,
-        mode="overwrite" # Usa "append" si vas a agregar datos sobre una tabla existente
-    )
+    # Escribimos los datos. 
+    # Usar CREATE OR REPLACE TABLE equivale al mode="overwrite"
+    # (Si quisieras mode="append", usarías INSERT INTO my_lake.warehouse SELECT * FROM df)
+    con.execute("CREATE OR REPLACE TABLE my_lake.warehouse AS SELECT * FROM df;")
     
-    print("¡Ingesta a Delta Lake completada con éxito!")
+    print("¡Ingesta a DuckLake completada con éxito!")
 
 if __name__ == "__main__":
-    ingest_to_delta()
+    ingest_to_ducklake()

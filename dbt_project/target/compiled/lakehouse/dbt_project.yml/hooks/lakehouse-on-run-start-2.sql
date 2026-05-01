@@ -1,1 +1,0 @@
-SET s3_endpoint='minio:9000';

@@ -1,37 +1,10 @@
-lakehouse:
+# Archivo: /workspace/dbt_project/profiles.yml
+mi_pos_project:
   target: dev
   outputs:
     dev:
       type: duckdb
-      path: /tmp/lakehouse.duckdb
+      path: 'local_dbt.duckdb'
       extensions:
         - httpfs
-        - aws
-      plugins:
-        - module: delta  # Este plugin usa Python (deltalake) para escribir
-      # DuckDB 1.0.0+ usa 'secrets' en lugar de 'settings' para S3
-      secrets:
-        - type: s3
-          region: 'us-east-1'
-          endpoint: 'minio:9000'
-          key_id: 'admin'
-          secret: 'password123'
-          use_ssl: false
-          url_style: 'path'
-
-    prod:
-      type: duckdb
-      path: /tmp/lakehouse_prod.duckdb
-      extensions:
-        - httpfs
-        - aws
-      plugins:
-        - module: delta
-      secrets:
-        - type: s3
-          region: "{{ env_var('AWS_REGION', 'us-east-1') }}"
-          endpoint: "minio:9000"
-          key_id: "{{ env_var('AWS_ACCESS_KEY_ID', 'admin') }}"
-          secret: "{{ env_var('AWS_SECRET_ACCESS_KEY', 'password123') }}"
-          use_ssl: false
-          url_style: "path"
+        - ducklake

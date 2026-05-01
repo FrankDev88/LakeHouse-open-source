@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: pos_landing
+    database: my_lake
+    schema: landing_pos  # El esquema donde DuckDB cargó los CSV/JSON iniciales
+    tables:
+      - name: raw_sales
+      - name: raw_products

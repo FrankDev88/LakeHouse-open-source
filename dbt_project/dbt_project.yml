@@ -1,8 +1,8 @@
+# Archivo: /workspace/dbt_project/dbt_project.yml
 name: 'lakehouse'
 version: '1.0.0'
 config-version: 2
-
-profile: 'lakehouse'
+profile: 'mi_pos_project'
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -16,23 +16,15 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
-on-run-start:
-  - "INSTALL httpfs; LOAD httpfs;"
-  - "INSTALL aws; LOAD aws;"
-  - "SET s3_endpoint='minio:9000';"
-  - "SET s3_use_ssl=false;"
-  - "SET s3_url_style='path';"
-  - "CALL load_aws_credentials();"
-
+# 👇 CONFIGURACIÓN DE LA ARQUITECTURA MEDALLÓN
 models:
   lakehouse:
-    materialized: external
-    format: delta
-    raw:
-      materialized: table
+    +database: my_lake # Forzamos a que todo viva en tu DuckLake
+    
     silver:
-      materialized: external
-      format: delta
+      +schema: silver
+      +materialized: view # Silver suele ser vistas ligeras o tablas incrementales
+      
     gold:
-      materialized: external
-      format: delta
+      +schema: gold
+      +materialized: table # Gold siempre son tablas sólidas listas para consultar
