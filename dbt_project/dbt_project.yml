@@ -17,14 +17,19 @@ clean-targets:
   - "dbt_packages"
 
 on-run-start:
-  - "INSTALL delta; LOAD delta;"
   - "INSTALL httpfs; LOAD httpfs;"
   - "INSTALL aws; LOAD aws;"
+  - "SET s3_endpoint='minio:9000';"
+  - "SET s3_use_ssl=false;"
+  - "SET s3_url_style='path';"
+  - "CALL load_aws_credentials();"
 
 models:
   lakehouse:
     materialized: external
     format: delta
+    raw:
+      materialized: table
     silver:
       materialized: external
       format: delta

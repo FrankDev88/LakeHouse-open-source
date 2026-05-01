@@ -1,1 +1,1 @@
-INSTALL aws; LOAD aws;
+SET s3_endpoint='minio:9000';

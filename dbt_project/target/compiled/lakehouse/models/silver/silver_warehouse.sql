@@ -1,4 +1,7 @@
+-- Este modelo lee desde la capa Bronze (DuckDB local) 
+-- y permite usar SQL estándar sin preocuparse por la conexión a Delta Lake/S3
+
 
 
 SELECT * 
-FROM delta_scan('s3://retail/raw')
+FROM "lakehouse"."main"."raw_warehouse"

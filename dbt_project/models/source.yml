@@ -1,8 +1,0 @@
-version: 2
-
-sources:
-  - name: retail
-    tables:
-      - name: raw
-        meta:
-          external_location: "delta_scan('s3://retail/raw')"

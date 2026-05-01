@@ -1,8 +1,9 @@
+-- Este modelo lee desde la capa Bronze (DuckDB local) 
+-- y permite usar SQL estándar sin preocuparse por la conexión a Delta Lake/S3
+
 {{ config(
-    materialized='external',
-    location='s3://retail/silver/warehouse',
-    format='delta' 
+    materialized='table'
 ) }}
 
 SELECT * 
-FROM {{ source('retail', 'raw') }}
+FROM {{ ref('raw_warehouse') }}

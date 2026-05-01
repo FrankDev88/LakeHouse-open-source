@@ -1,1 +1,1 @@
-INSTALL delta; LOAD delta;
+INSTALL httpfs; LOAD httpfs;

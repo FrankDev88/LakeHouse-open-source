@@ -1,1 +1,1 @@
-INSTALL httpfs; LOAD httpfs;
+INSTALL aws; LOAD aws;
