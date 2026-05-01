@@ -31,6 +31,7 @@ def model(dbt, session):
         "s3://lakehouse/silver/sales_silver",
         df,
         mode="overwrite",
+        overwrite_schema=True,
         storage_options=storage_options
     )
     

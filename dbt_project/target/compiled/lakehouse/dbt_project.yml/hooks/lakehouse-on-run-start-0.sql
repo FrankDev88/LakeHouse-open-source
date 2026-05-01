@@ -1,0 +1,1 @@
+INSTALL delta; LOAD delta;

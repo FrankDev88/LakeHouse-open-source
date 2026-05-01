@@ -1,10 +1,11 @@
 version: '3.8'
 
-x-airflow-common:
-  &airflow-common
-  image: apache/airflow:2.9.1-python3.10
-  environment:
-    &airflow-common-env
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: ./docker/Dockerfile.airflow
+  user: "${AIRFLOW_UID:-50000}:0"
+  environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -18,7 +19,7 @@ x-airflow-common:
     AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-password123}
     AWS_REGION: us-east-1
     S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
-    _PIP_ADDITIONAL_DEPENDENCIES: "duckdb==1.0.0 dbt-duckdb==1.8.0 pandas==2.2.2 deltalake==0.17.0"
+
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - airflow-logs:/opt/airflow/logs
@@ -41,7 +42,7 @@ services:
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
+      test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 10s
       retries: 5
       start_period: 5s
@@ -64,7 +65,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -92,7 +93,7 @@ services:
     volumes:
       - minio-data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -111,7 +112,54 @@ services:
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-password123}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
 
+  spark-master:
+    image: apache/spark:3.5.0
+    user: root
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-admin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-password123}
+    command: >
+      /bin/bash -c "
+        /opt/spark/sbin/start-master.sh --host 0.0.0.0 --port 7077 --webui-port 8080 &&
+        tail -f /opt/spark/logs/*
+      "
+    ports:
+      - "7077:7077"   # Spark master port
+      - "8081:8080"   # Spark master UI
+    volumes:
+      - spark-logs:/opt/spark/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      minio:
+        condition: service_healthy
 
+  spark-worker:
+    image: apache/spark:3.5.0
+    user: root
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-2g}
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-2}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-admin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-password123}
+    command: >
+      /bin/bash -c "
+        /opt/spark/sbin/start-worker.sh spark://spark-master:7077 &&
+        tail -f /opt/spark/logs/*
+      "
+    ports:
+      - "8082:8081"   # Spark worker UI
+    volumes:
+      - spark-logs:/opt/spark/logs
+    depends_on:
+      spark-master:
+        condition: service_healthy
 
   workspace:
     build:
@@ -120,20 +168,26 @@ services:
     volumes:
       - .:/workspace
     working_dir: /workspace
+    ports:
+      - "8888:8888"
     environment:
       AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-admin}
       AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-password123}
       AWS_REGION: us-east-1
       AWS_ENDPOINT_URL: ${S3_ENDPOINT:-http://minio:9000}
+      SPARK_MASTER_URL: spark://spark-master:7077
 
     depends_on:
       minio:
         condition: service_healthy
+      spark-master:
+        condition: service_started
     command: tail -f /dev/null # Keep container alive
 
 volumes:
   postgres-db-volume:
   minio-data:
+  spark-logs:
 
   airflow-logs:
   airflow-plugins:

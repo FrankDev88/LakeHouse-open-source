@@ -16,6 +16,11 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+on-run-start:
+  - "INSTALL delta; LOAD delta;"
+  - "INSTALL httpfs; LOAD httpfs;"
+  - "INSTALL aws; LOAD aws;"
+
 models:
   lakehouse:
     materialized: external
