@@ -1,8 +1,6 @@
-version: 2
-
 sources:
-  - name: my_lake
-    database: my_lake
-    schema: main  # Si esto falla, prueba quitando la línea de schema
+  - name: raw_lake
+    database: raw_lake
+    schema: main
     tables:
       - name: warehouse

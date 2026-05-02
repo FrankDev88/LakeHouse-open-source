@@ -1,1 +1,0 @@
-ATTACH 'ducklake:/workspace/dbt_project/retail_metadata.ducklake' AS my_lake (DATA_PATH 's3://retail/raw/retail_raw');

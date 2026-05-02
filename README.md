@@ -8,6 +8,10 @@ La filosofía central es **"Zero-Spark"**: Reemplazamos los pesados clústeres d
 
 ## 🏗️ Arquitectura del Sistema
 
+![Arquitectura del Proyecto](arquitectura.webp)
+
+### Diagrama Técnico (Mermaid)
+
 ```mermaid
 graph TD
     subgraph "External Sources"
@@ -29,6 +33,7 @@ graph TD
 
     S -->|Ingest| B
 ```
+
 
 ## 🛠️ Stack Tecnológico
 

@@ -51,16 +51,15 @@ def ingest_to_ducklake():
     
     # ATTACH crea el metastore (el 'cerebro' de DuckLake) y lo vincula a tu bucket en MinIO
     # Se creará un archivo local 'retail_metadata.ducklake' para gobernar esa ruta
-    con.execute(f"""
-        ATTACH 'ducklake:retail_metadata.ducklake' AS my_lake 
-        (DATA_PATH '{ducklake_path}');
+
+
+    con.execute("""
+        ATTACH 'ducklake:/workspace/dbt_project/raw_metadata.ducklake' AS raw_lake 
+        (DATA_PATH 's3://retail/raw/');
     """)
-    
-    # Escribimos los datos. 
-    # Usar CREATE OR REPLACE TABLE equivale al mode="overwrite"
-    # (Si quisieras mode="append", usarías INSERT INTO my_lake.warehouse SELECT * FROM df)
-    con.execute("CREATE OR REPLACE TABLE my_lake.warehouse AS SELECT * FROM df;")
-    
+    con.execute("CREATE OR REPLACE TABLE raw_lake.warehouse AS SELECT * FROM df;")
+
+
     print("¡Ingesta a DuckLake completada con éxito!")
 
 if __name__ == "__main__":

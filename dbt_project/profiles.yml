@@ -19,7 +19,15 @@ tu_proyecto_dbt:
         s3_use_ssl: false
 
       attach:
-        - path: "ducklake:/workspace/dbt_project/retail_metadata.ducklake"
-          alias: my_lake
+        - path: "ducklake:/workspace/dbt_project/raw_metadata.ducklake"
+          alias: raw_lake
           options:
-            data_path: "s3://retail/raw/retail_raw"
+            data_path: "s3://retail/raw/"
+        - path: "ducklake:/workspace/dbt_project/silver_metadata.ducklake"
+          alias: silver_lake
+          options:
+            data_path: "s3://retail/silver/"
+        - path: "ducklake:/workspace/dbt_project/gold_metadata.ducklake"
+          alias: gold_lake
+          options:
+            data_path: "s3://retail/gold/"
