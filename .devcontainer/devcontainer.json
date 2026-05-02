@@ -1,8 +1,0 @@
-{
-  "name": "proyecto-1-workspace",
-  "dockerComposeFile": "../docker-compose.yml",
-  "service": "workspace",
-  "workspaceFolder": "/workspace",
-  "remoteUser": "root",
-  "shutdownAction": "none"
-}
