@@ -1,30 +1,27 @@
-# Archivo: /workspace/dbt_project/dbt_project.yml
-name: 'lakehouse'
+name: 'tu_proyecto_dbt'
 version: '1.0.0'
 config-version: 2
-profile: 'mi_pos_project'
+
+profile: 'tu_proyecto_dbt'
+
+# --- AGREGA ESTE BLOQUE ---
+on-run-start:
+  - "INSTALL httpfs;"
+  - "LOAD httpfs;"
+  - "INSTALL ducklake;"
+  - "LOAD ducklake;"
+  - "CREATE SECRET IF NOT EXISTS minio_secret (TYPE S3, KEY_ID 'admin', SECRET 'password123', REGION 'us-east-1', ENDPOINT 'minio:9000', URL_STYLE 'path', USE_SSL false);"
+# --------------------------
 
 model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
-
 target-path: "target"
-clean-targets:
-  - "target"
-  - "dbt_packages"
+clean-targets: ["target", "dbt_packages"]
 
-# 👇 CONFIGURACIÓN DE LA ARQUITECTURA MEDALLÓN
 models:
-  lakehouse:
-    +database: my_lake # Forzamos a que todo viva en tu DuckLake
-    
+  tu_proyecto_dbt:
     silver:
+      +materialized: table
       +schema: silver
-      +materialized: view # Silver suele ser vistas ligeras o tablas incrementales
-      
     gold:
+      +materialized: table
       +schema: gold
-      +materialized: table # Gold siempre son tablas sólidas listas para consultar

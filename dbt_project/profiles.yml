@@ -1,10 +1,25 @@
-# Archivo: /workspace/dbt_project/profiles.yml
-mi_pos_project:
+tu_proyecto_dbt:
   target: dev
   outputs:
     dev:
       type: duckdb
-      path: 'local_dbt.duckdb'
+      path: dbt_metadata.duckdb
+      threads: 1 # Mantenlo en 1 mientras depuramos para evitar bloqueos de archivo
+      
       extensions:
-        - httpfs
         - ducklake
+        - httpfs
+        
+      settings:
+        s3_endpoint: "minio:9000"
+        s3_access_key_id: "admin"
+        s3_secret_access_key: "password123"
+        s3_region: "us-east-1"
+        s3_url_style: "path"
+        s3_use_ssl: false
+
+      attach:
+        - path: "ducklake:/workspace/dbt_project/retail_metadata.ducklake"
+          alias: my_lake
+          options:
+            data_path: "s3://retail/raw/retail_raw"

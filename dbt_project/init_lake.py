@@ -1,40 +1,25 @@
-# Archivo: /workspace/dbt_project/init_lake.py
 import duckdb
 
-# Conectamos al archivo que usa tu profiles.yml
-con = duckdb.connect('local_dbt.duckdb')
+con = duckdb.connect("/workspace/dbt_project/dbt_metadata.duckdb")
 
-# 1. Cargamos extensiones necesarias
-con.execute("INSTALL httpfs; LOAD httpfs;")
-con.execute("INSTALL ducklake; LOAD ducklake;")
-
-# 2. Creamos el secreto de forma PERSISTENTE
-# Al ser PERSISTENT, se guarda en el archivo .duckdb y dbt lo verá
+# La view sales_silver referencia my_lake, así que hay que attacharlo
+con.execute("LOAD httpfs; LOAD ducklake;")
 con.execute("""
-CREATE PERSISTENT SECRET IF NOT EXISTS minio_secret (
-    TYPE S3, 
-    KEY_ID 'admin', 
-    SECRET 'password123', 
-    REGION 'us-east-1', 
-    ENDPOINT 'minio:9000', 
-    URL_STYLE 'path', 
-    USE_SSL false
-);
+    CREATE SECRET IF NOT EXISTS minio_secret (
+        TYPE S3, KEY_ID 'admin', SECRET 'password123',
+        REGION 'us-east-1', ENDPOINT 'minio:9000',
+        URL_STYLE 'path', USE_SSL false
+    );
+""")
+con.execute("""
+    ATTACH 'ducklake:/workspace/dbt_project/retail_metadata.ducklake' AS my_lake 
+    (DATA_PATH 's3://retail/raw/retail_raw');
 """)
 
-# 3. Atachamos el catálogo forzando la ruta
-# Usamos el OVERRIDE para que no te vuelva a dar la "Nota"
-try:
-    con.execute("""
-        ATTACH 'ducklake:/workspace/retail_metadata.ducklake' AS my_lake 
-        (DATA_PATH 's3://retail/', OVERRIDE_DATA_PATH true);
-    """)
-    print("✅ Catálogo 'my_lake' anclado correctamente.")
-except Exception as e:
-    print(f"Error al atachar: {e}")
+print("=== PRIMERAS 5 FILAS DE sales_silver ===")
+print(con.execute("SELECT * FROM main_silver.sales_silver LIMIT 5;").df().to_string(index=False))
 
-# 4. TRUCO FINAL: Crear un objeto vacío para forzar a DuckDB a guardar el estado
-con.execute("CREATE TABLE IF NOT EXISTS dbt_init_check AS SELECT 1;")
+print("\n=== CONTEO ===")
+print(con.execute("SELECT COUNT(*) as total FROM main_silver.sales_silver;").df().to_string(index=False))
 
 con.close()
-print("🚀 Base de datos 'local_dbt.duckdb' lista para dbt.")
