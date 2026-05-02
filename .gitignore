@@ -2,3 +2,4 @@
 ./scripts
 .devcontainer/
 .ipynb_checkpoints/
+.env
