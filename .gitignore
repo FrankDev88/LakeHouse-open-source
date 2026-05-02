@@ -1,2 +1,5 @@
 ./logs
-./notebooks
+.env
+./scripts
+.devcontainer/
+.ipynb_checkpoints/
