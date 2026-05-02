@@ -55,16 +55,3 @@ Es el chef. Lee el menú (DuckLake), saca los ingredientes del refrigerador (Min
 
 ### 4. El Orquestador de Lógica (dbt)
 Es el **Libro de Recetas** y el **Capitán del Barco**. dbt no "toca" los datos, pero le dice a DuckDB exactamente en qué orden cocinar cada plato (`ref`). Él sabe que no puede haber "Gold" si antes no se terminó el "Silver".
-
----
-
-## 💡 ¿Por qué esta arquitectura es "Guerra de Galaxias"?
-
-*   **Desacoplamiento Total:** Puedes borrar los catálogos de metadatos y no pierdes ni un solo dato. dbt y DuckLake los reconstruirán en segundos.
-*   **Escalabilidad Mental:** Estás aprendiendo exactamente cómo funciona Databricks o Snowflake, pero sin pagar la factura de la nube.
-*   **Velocidad:** Al no guardar los datos dentro del motor, las consultas vuelan porque DuckDB solo procesa lo que necesita "bajo demanda".
-
----
-
-## 🚀 Inicio Rápido
-

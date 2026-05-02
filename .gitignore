@@ -1,5 +1,4 @@
 ./logs
-.env
 ./scripts
 .devcontainer/
 .ipynb_checkpoints/
