@@ -1,6 +1,9 @@
 {{ config(
     materialized='table',
-    database='silver_lake'
+    database='gold_lake',
+    alias='warehouse_gold'
 ) }}
 
-SELECT * FROM {{ source('raw_lake', 'warehouse') }}
+SELECT
+*
+FROM {{ ref('warehouse_silver') }}

@@ -1,5 +1,7 @@
-./logs
-./scripts
+logs/
+scripts/
 .devcontainer/
 .ipynb_checkpoints/
 .env
+notebooks/*
+!notebooks/.gitkeep
