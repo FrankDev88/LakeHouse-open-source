@@ -1,8 +1,21 @@
-# 🚀 Local Data Lakehouse Project
+# Local DuckLake Project
 
 Este proyecto implementa una arquitectura **DuckLake** de grado empresarial, optimizada para un despliegue ligero y eficiente en un solo nodo 
 
 La filosofía central es **"Zero-Spark"**: Reemplazamos los pesados clústeres distribuidos por la arquitectura **DuckLake**, utilizando **DuckDB** con la extensión **DuckLake**, logrando latencias analíticas mínimas sin la sobrecarga de la JVM.
+
+Esto proyecto es para demostrar la arquitectura DuckLake en accion y que en realidad puede servir para el **90%** de los casos reales.
+
+A los creadores han afirmado que puede consultar petabytes de informacion en segundos, para mi esto suena a una locura pero lo mas probable es que tengan razon por lo que recomiendo que lo tengan en cuenta. 
+
+![Rendimiento un Duck Lake](rendimiento.webp)
+
+
+**Nota**: Si bien DuckDB puede manejar grandes volúmenes de datos en memoria, el rendimiento real dependerá de la capacidad de la máquina (RAM y CPU). Para casos de uso con datos que excedan la capacidad de la máquina, se pueden explorar opciones de escalabilidad, como el uso de múltiples nodos o la integración con soluciones de almacenamiento distribuido.
+
+
+Este proyecto se hizo en base al articulo de practical data enginering.
+***https://www.pracdata.io/p/is-ducklake-a-step-backward***
 
 ---
 
@@ -55,3 +68,49 @@ Es el chef. Lee el menú (DuckLake), saca los ingredientes del refrigerador (Min
 
 ### 4. El Orquestador de Lógica (dbt)
 Es el **Libro de Recetas** y el **Capitán del Barco**. dbt no "toca" los datos, pero le dice a DuckDB exactamente en qué orden cocinar cada plato (`ref`). Él sabe que no puede haber "Gold" si antes no se terminó el "Silver".
+
+
+---
+
+# Variables de entorno de ejemplo para el docker compose 
+
+### Minio 
+MinIO Configuration
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=password123
+AWS_ACCESS_KEY_ID=admin
+AWS_SECRET_ACCESS_KEY=password123
+AWS_REGION=us-east-1
+S3_ENDPOINT=http://minio:9000
+
+## 🏗️ Arquitectura de Minio
+Se opto por usar Minio en lugar de S3 debido a que es un servicio gratuito y de código abierto que permite almacenar objetos en la **"nube"**, es totalmente compatible con la API de S3, por lo que se puede usar con las mismas herramientas y librerías que se usan con S3.
+
+![Arquitectura de minio](minio.png)
+
+ --- 
+
+
+
+
+### Airflow
+Airflow Configuration
+AIRFLOW_UID=1000
+AIRFLOW_PROJ_DIR=./airflow
+_AIRFLOW_WWW_USER_USERNAME=admin
+_AIRFLOW_WWW_USER_PASSWORD=admin
+_PIP_ADDITIONAL_REQUIREMENTS='duckdb==1.0.0 dbt-duckdb==1.8.0 pandas==2.2.2 deltalake==0.17.0 requests==2.31.0'
+
+## 🏗️ Arquitectura de Airflow
+Se opto por usar Airflow como orquestador debido a que es un servicio gratuito y de código abierto que permite orquestar flujos de trabajo, es totalmente compatible con la API de S3, por lo que se puede usar con las mismas herramientas y librerías que se usan con S3.
+
+![Arquitectura de airflow](a.gif)
+
+
+### PostgreSQL
+PostgreSQL Configuration (used by Airflow & UC)
+POSTGRES_USER=airflow
+POSTGRES_PASSWORD=airflow
+POSTGRES_DB=airflow
+
+---

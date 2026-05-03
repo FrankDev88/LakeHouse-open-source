@@ -3,8 +3,8 @@ tu_proyecto_dbt:
   outputs:
     dev:
       type: duckdb
-      path: dbt_metadata.duckdb
-      threads: 1 # Mantenlo en 1 mientras depuramos para evitar bloqueos de archivo
+      path: "{{ env_var('DBT_PROJECT_PATH') }}/dbt_metadata.duckdb"
+      threads: 1
       
       extensions:
         - ducklake
@@ -19,15 +19,15 @@ tu_proyecto_dbt:
         s3_use_ssl: false
 
       attach:
-        - path: "ducklake:/workspace/dbt_project/raw_metadata.ducklake"
+        - path: "ducklake:{{ env_var('DBT_PROJECT_PATH') }}/raw_metadata.ducklake"
           alias: raw_lake
           options:
             data_path: "s3://retail/raw/"
-        - path: "ducklake:/workspace/dbt_project/silver_metadata.ducklake"
+        - path: "ducklake:{{ env_var('DBT_PROJECT_PATH') }}/silver_metadata.ducklake"
           alias: silver_lake
           options:
             data_path: "s3://retail/silver/"
-        - path: "ducklake:/workspace/dbt_project/gold_metadata.ducklake"
+        - path: "ducklake:{{ env_var('DBT_PROJECT_PATH') }}/gold_metadata.ducklake"
           alias: gold_lake
           options:
             data_path: "s3://retail/gold/"

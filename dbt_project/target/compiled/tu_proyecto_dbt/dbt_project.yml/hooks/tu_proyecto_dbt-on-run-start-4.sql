@@ -1,0 +1,1 @@
+CREATE SECRET IF NOT EXISTS minio_secret (TYPE S3, KEY_ID 'admin', SECRET 'password123', REGION 'us-east-1', ENDPOINT 'minio:9000', URL_STYLE 'path', USE_SSL false);

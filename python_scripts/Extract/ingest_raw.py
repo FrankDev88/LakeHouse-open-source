@@ -52,11 +52,17 @@ def ingest_to_ducklake():
     # ATTACH crea el metastore (el 'cerebro' de DuckLake) y lo vincula a tu bucket en MinIO
     # Se creará un archivo local 'retail_metadata.ducklake' para gobernar esa ruta
 
+    # Después - dinámico
+    base_dir = os.getenv("DBT_PROJECT_PATH", os.path.join(os.path.dirname(__file__), "../../dbt_project"))
+    base_dir = os.path.abspath(base_dir)
+    ducklake_metadata_path = os.path.join(base_dir, "raw_metadata.ducklake")
 
-    con.execute("""
-        ATTACH 'ducklake:/workspace/dbt_project/raw_metadata.ducklake' AS raw_lake 
-        (DATA_PATH 's3://retail/raw/');
+    con.execute(f"""
+    ATTACH 'ducklake:{ducklake_metadata_path}' AS raw_lake 
+    (DATA_PATH 's3://retail/raw/');
     """)
+
+    
     con.execute("CREATE OR REPLACE TABLE raw_lake.warehouse AS SELECT * FROM df;")
 
 

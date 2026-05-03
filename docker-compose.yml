@@ -1,5 +1,4 @@
 version: '3.8'
-
 x-airflow-common: &airflow-common
   build:
     context: .
@@ -19,7 +18,7 @@ x-airflow-common: &airflow-common
     AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-password123}
     AWS_REGION: us-east-1
     S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
-
+    DBT_PROJECT_PATH: /opt/airflow/dags/dbt_project
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - airflow-logs:/opt/airflow/logs
@@ -27,11 +26,11 @@ x-airflow-common: &airflow-common
     - ./dbt_project:/opt/airflow/dags/dbt_project
     - ./scripts:/opt/airflow/dags/scripts
     - ./python_scripts:/opt/airflow/dags/python_scripts
+    - ./warehouse.csv:/opt/airflow/dags/warehouse.csv
     - ./.env:/opt/airflow/.env
   depends_on:
     postgres:
       condition: service_healthy
-
 services:
   postgres:
     image: postgres:15
@@ -49,6 +48,13 @@ services:
     ports:
       - "5432:5432"
 
+  dbt-init:
+    image: alpine
+    user: root
+    volumes:
+      - ./dbt_project:/opt/airflow/dags/dbt_project
+    command: sh -c "chmod -R 777 /opt/airflow/dags/dbt_project"
+
   airflow-init:
     <<: *airflow-common
     command: version
@@ -58,6 +64,11 @@ services:
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-admin}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-admin}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dbt-init:
+        condition: service_completed_successfully
 
   airflow-webserver:
     <<: *airflow-common
@@ -132,15 +143,14 @@ services:
       AWS_ALLOW_HTTP: "true"
       AWS_EC2_METADATA_DISABLED: "true"
       AWS_S3_ALLOW_UNSAFE_RENAME: "true"
-
+      DBT_PROJECT_PATH: /workspace/dbt_project
     depends_on:
       minio:
         condition: service_healthy
-    command: tail -f /dev/null # Keep container alive
+    command: tail -f /dev/null
 
 volumes:
   postgres-db-volume:
   minio-data:
-
   airflow-logs:
   airflow-plugins:

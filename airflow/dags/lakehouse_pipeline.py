@@ -24,13 +24,14 @@ with DAG(
     schedule_interval=timedelta(days=1),
     start_date=days_ago(1),
     catchup=False,
+    max_active_runs=1,
     tags=['dbt', 'lakehouse', 'duckdb'],
 ) as dag:
 
-    # 1. Ingestar datos a Bronze
-    ingest_bronze = BashOperator(
-        task_id='ingest_bronze',
-        bash_command=f'python {PYTHON_SCRIPTS_DIR}/ingest_bronze.py',
+    # 1. Ingestar datos a Raw
+    ingest_raw = BashOperator(
+        task_id='ingest_raw',
+        bash_command=f'cd /opt/airflow/dags && python python_scripts/Extract/ingest_raw.py',
     )
 
     # 2. Inicializar dbt (deps)
@@ -58,4 +59,4 @@ with DAG(
     )
 
     # Definir dependencias
-    ingest_bronze >> dbt_deps >> dbt_run >> dbt_test
+    ingest_raw >> dbt_deps >> dbt_run >> dbt_test
